@@ -164,28 +164,39 @@ ChatGPT expects a **remote** HTTPS MCP. NeoRecall is **stdio on your machine** t
 
 ## Suggested prompts
 
-Copy-paste these into Cursor, Claude, or Codex after NeoRecall is connected.
+Copy-paste these into Cursor, Claude, or Codex after NeoRecall is connected. Each tool lists several phrasings that should route to it.
 
-| You say | Tool(s) |
-|---------|---------|
-| What did I do this week? | `weekly_brief` |
-| What did I do today? | `daily_brief` |
-| Pack my week into one artifact I can paste | `export_brief_pack` |
-| Compare this week to last week | `compare_periods` |
-| Anything new since yesterday? | `whats_new` |
-| When did I talk about RAG / MCP / Product Hunt? | `topic_timeline` |
-| Everything about Preetam / Varun | `people_digest` |
-| What can I archive or clean up? | `triage_memories` |
-| My most important conversations lately | `rank_by_quality` |
-| What open questions do I still have since July 1? | `action_items` |
-| What follow-ups are still hanging? | `follow_ups_due` |
-| Log the decisions I made about MCP | `decision_log` |
-| Map threads related to this memory | `memory_graph` |
-| Find near-duplicate notes | `duplicate_candidates` |
-| When am I usually recording? | `habit_signals` |
-| Find where I said “content ho gaya” | `quote_search` |
-| How many memories / top topics? | `memory_stats` |
-| Who am I signed in as? | `get_profile` |
+| Tool | Sample prompts |
+|------|----------------|
+| `search_memories` | Search my memories for “Product Hunt launch”. · Find notes tagged MCP from last month. · Memories about RAG with Vaibhav. · Show travel-domain memories since June. |
+| `list_memories` | Show my latest 20 memories. · List everything I recorded this month. · Browse my most recent notes without a keyword. |
+| `list_filtered_memories` | Pull light details for these memory IDs: … · Re-fetch just the ids from the last search. |
+| `get_memory` | Open the full memory for id … including MOM. · Give me the detail view of that Product Hunt talk. · Show title, people, topics, and minutes for … |
+| `get_transcript` | Get the transcript for memory … · What was said word-for-word in that call? · Pull the speaker turns for id … |
+| `search_people` | Who shows up in my memories named Preetam? · Search people matching “Varun”. · List people I’ve been talking to lately. |
+| `get_latest_by_person` | What’s the latest I have with Mansi? · Show recent memories owned by / featuring Gaurav. · Last 5 notes involving Vaibhav. |
+| `memory_stats` | How many memories do I have? · What are my top topics and domains? · Give me a corpus overview. |
+| `get_profile` | Who am I signed in as? · Confirm my NeoRecall / NeoSapien profile. · What’s my subscription status? |
+| `export_memories` | Export these memory ids as JSON. · Dump the last search results to JSON for me. |
+| `weekly_brief` | What did I do this week? · Summarize last week’s recordings. · Give me a week-in-review for the week of June 30. |
+| `daily_brief` | What did I do today? · Brief me on yesterday. · Daily summary for 2026-07-10. |
+| `export_brief_pack` | Pack my week into one artifact I can paste. · Build a brief pack with people and open actions. · One payload for my weekly review doc. |
+| `whats_new` | Anything new since yesterday? · What landed since Monday morning? · Show memories created after 2026-07-09. |
+| `topic_timeline` | When did I talk about RAG? · Timeline of MCP decisions. · Chronology of Product Hunt mentions. · Plot my “hiring” topic over time. |
+| `people_digest` | Everything about Preetam. · Digest all conversations with Varun. · What have I discussed with Mansi lately? |
+| `triage_memories` | What can I archive or clean up? · Find low-value / short notes to triage. · Which memories look safe to archive? |
+| `rank_by_quality` | My most important conversations lately. · Rank the highest-signal meetings this month. · Skip the noise — show quality first. |
+| `related_memories` | What else is related to memory …? · Find neighbors of that RAG Product Hunt talk. · Memories similar to id … |
+| `compare_periods` | Compare this week to last week. · How did June activity compare to May? · Count and duration delta for the last 7 vs prior 7 days. |
+| `habit_signals` | When am I usually recording? · What days/hours am I busiest? · Domain mix and peak hours for the last 2 weeks. |
+| `action_items` | What open questions do I still have since July 1? · Pull action items from recent meetings. · Unresolved questions in my MCP notes. |
+| `follow_ups_due` | What follow-ups are still hanging? · Anything that said “next week” I should chase? · Follow-ups mentioning email or a date. |
+| `decision_log` | Log the decisions I made about MCP. · What did we decide on Zoho / PR gates? · Decision chronology for Product Hunt. |
+| `memory_graph` | Map threads related to this memory. · Graph neighbors of the RAG talk. · Who and what topics connect to id …? |
+| `duplicate_candidates` | Find near-duplicate notes. · Any double-recorded meetings I can merge/clean? · Duplicate candidates from the last 400 memories. |
+| `quote_search` | Find where I said “content ho gaya”. · Search transcripts for “ship it Friday”. · Who said “let’s park Atlation” and when? |
+| `set_presentation_pref` | Always show rich cards when you present NeoRecall results. · Ask me before fancy formatting. · Never use themed cards — plain text only. |
+| `get_presentation_pref` | What’s my presentation preference? · Are we on ask, always, or never for rich UI? |
 
 ---
 
