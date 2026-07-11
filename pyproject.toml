@@ -1,7 +1,7 @@
 [project]
 name = "neo-recall"
 version = "0.1.0"
-description = "NeoRecall — read-only MCP for NeoSapien / NeoCore memories with local synthesis tools"
+description = "NeoRecall — read-only MCP for NeoSapien memories with local synthesis tools"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }

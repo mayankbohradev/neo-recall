@@ -1,4 +1,4 @@
-Read-only access to your Neosapien / NeoCore memories — search, digest, triage, and reason
+Read-only access to your NeoSapien memories — search, digest, triage, and reason
 over your recorded conversations. Never modifies your data.
 
 ## Vague-ask → tool cheat-sheet

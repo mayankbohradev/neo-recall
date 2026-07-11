@@ -2,7 +2,7 @@
 
 ## What we're building
 
-**NeoRecall** — a **read-only MCP server** for NeoSapien / NeoCore memories.
+**NeoRecall** — a **read-only MCP server** for NeoSapien memories.
 Parity with the official Neo Sapien MCP **plus** local synthesis (briefs, triage,
 quality ranking, people digests, period compare, decision log, graph, quote search).
 **No write/edit/delete tools, ever.**

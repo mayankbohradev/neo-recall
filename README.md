@@ -1,6 +1,6 @@
 # NeoRecall
 
-**NeoRecall** is a read-only [MCP](https://modelcontextprotocol.io) server for [NeoSapien](https://neosapien.ai) / NeoCore memories.
+**NeoRecall** is a read-only [MCP](https://modelcontextprotocol.io) server for [NeoSapien](https://neosapien.ai) memories.
 
 It matches the official Neo Sapien MCP’s read surface, then adds **local synthesis** tools — briefs, triage, quality ranking, people digests, period comparison, decision logs, memory graphs, and quote search — so agents can answer *“what happened this week?”* without dumping fifty raw rows into the chat.
 
