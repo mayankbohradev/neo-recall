@@ -1,10 +1,13 @@
 # NeoRecall
 
-**NeoRecall** is a read-only [MCP](https://modelcontextprotocol.io) server for [NeoSapien](https://neosapien.ai) memories.
+**NeoRecall** is an [MCP](https://modelcontextprotocol.io) server for [NeoSapien](https://neosapien.ai) memories.
 
 It matches the official Neo Sapien MCP’s read surface, then adds **local synthesis** tools — briefs, triage, quality ranking, people digests, period comparison, decision logs, memory graphs, and quote search — so agents can answer *“what happened this week?”* without dumping fifty raw rows into the chat.
 
-**Read-only by design.** No delete, edit, or write tools. The only network write is refreshing your Google login token.
+**Read-first, write-carefully.** 29 read tools, plus 3 write tools (`delete_memories`,
+`update_memory`, `update_participants`) that are **two-phase**: the first call only ever
+returns a preview of what would change and writes nothing — you must confirm before
+anything is touched. Deletes are permanent; NeoSapien exposes no archive/undo.
 
 ---
 
@@ -132,6 +135,18 @@ ChatGPT expects a **remote** HTTPS MCP. NeoRecall is **stdio on your machine** t
 | `get_profile` | Display name, email, subscription (no extra PII) |
 | `export_memories` | Export selected IDs (json) |
 
+### Write tools (two-phase — preview, then confirm)
+
+| Tool | What it does |
+|------|----------------|
+| `delete_memories` | **Permanently** remove memories from your NeoSapien profile (no undo) |
+| `update_memory` | Fix a memory's title / summary |
+| `update_participants` | Add, remove, or replace who was in a conversation |
+
+Every write returns `confirmation_required` with a preview on the first call and performs
+**no** write. Re-run with `confirm=true` to apply. Deletes are verified by re-reading your
+profile afterwards — a write that didn't take is reported honestly, never as success.
+
 ### Synthesis & briefs
 
 | Tool | What it does |
@@ -178,6 +193,9 @@ Copy-paste these into Cursor, Claude, or Codex after NeoRecall is connected. Eac
 | `memory_stats` | How many memories do I have? · What are my top topics and domains? · Give me a corpus overview. |
 | `get_profile` | Who am I signed in as? · Confirm my NeoRecall / NeoSapien profile. · What’s my subscription status? |
 | `export_memories` | Export these memory ids as JSON. · Dump the last search results to JSON for me. |
+| `delete_memories` | Delete that memory about the dashboard — show me what you'll remove first. · Clean up my accidental 10-second recordings from today. · Remove these memory ids permanently. |
+| `update_memory` | Fix the title of that memory to “Pricing sync with Shiva”. · Rewrite the summary of id … to mention the RevenueCat migration. |
+| `update_participants` | Add Shiva to that memory's participants. · Remove Varun from the standup memory — he wasn't there. · Set the participants on id … to just me and Mansi. |
 | `weekly_brief` | What did I do this week? · Summarize last week’s recordings. · Give me a week-in-review for the week of June 30. |
 | `daily_brief` | What did I do today? · Brief me on yesterday. · Daily summary for 2026-07-10. |
 | `export_brief_pack` | Pack my week into one artifact I can paste. · Build a brief pack with people and open actions. · One payload for my weekly review doc. |
@@ -237,13 +255,14 @@ Live evaluation on a real NeoSapien account (~2.6k memories), NeoRecall vs offic
 ## Architecture
 
 ```text
-MCP tools → SQLite cache → Firestore (users/{uid}/memories)
-Auth      → Google once → refresh token in keychain → hourly ID token
+Reads  → SQLite cache → Firestore (users/{uid}/memories)
+Writes → NeoSapien backend (source of truth) → mirrored to Firestore
+Auth   → Google once → refresh token in keychain → hourly ID token
 ```
 
 Hard rules:
 
-1. Read-only — only allowed POST is `securetoken.googleapis.com` (token refresh).
+1. Writes are opt-in and two-phase — nothing is modified without an explicit `confirm=true`.
 2. Tokens never logged.
 3. Light rows by default; transcript / MOM on demand.
 4. Firestore `integerValue` arrives as a string — parsed carefully.
