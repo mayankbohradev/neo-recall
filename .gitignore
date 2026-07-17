@@ -16,3 +16,5 @@ build/
 .DS_Store
 credentials.enc
 probe_dump.json
+probe_write_report.json
+probe_write_backup.json

@@ -37,6 +37,18 @@ async def ensure_index(*, force_refresh: bool = False) -> list[MemoryLight]:
     return memories
 
 
+def invalidate_index() -> None:
+    """
+    Force the next ensure_index() to re-fetch from Firestore.
+
+    Writes must call this. The cache has a 10-minute TTL, so without it an
+    archive/edit would not show up in list/search until the TTL lapsed — which
+    reads to the user as "the write silently failed".
+    """
+    cache = get_cache()
+    cache.set_meta("synced_at", "0")
+
+
 def normalize_end_date(end_date: str | None) -> str | None:
     """Include the full calendar day when user passes YYYY-MM-DD."""
     if not end_date:

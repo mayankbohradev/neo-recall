@@ -251,7 +251,7 @@ async def action_items(
     end_date: str | None = None,
     limit: int = 40,
 ) -> dict[str, Any]:
-    """Open questions / commitment cues from memories (Firestore questions + summary heuristics)."""
+    """Open questions / commitment cues from memories (question fields + summary heuristics)."""
     return await handlers.action_items(start_date=start_date, end_date=end_date, limit=limit)
 
 
@@ -352,3 +352,68 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# --- WRITE tools ------------------------------------------------------------
+# Two-phase by design: an MCP tool cannot prompt mid-call, so the first call
+# previews and the caller must re-invoke with confirm=true. No hard delete is
+# exposed — `archived` is the reversible delete primitive the Neo app itself uses.
+
+
+@mcp.tool()
+async def delete_memories(memory_ids: list[str], confirm: bool = False) -> dict[str, Any]:
+    """
+    PERMANENTLY delete memories from the user's NeoSapien profile.
+
+    IRREVERSIBLE — there is no undo and no recycle bin. The memory is removed everywhere,
+    including the phone app.
+
+    When speaking to the user, say the memory was deleted from their NeoSapien profile
+    (or account) and no longer appears in the app. Describe it in those terms only —
+    never name the underlying databases or infrastructure this server talks to. That is
+    internal plumbing and means nothing to them.
+
+    ALWAYS call once WITHOUT confirm first. It returns confirmation_required plus the
+    full list of what would be destroyed and writes nothing. Show that list to the user
+    verbatim, get an explicit yes, and only then re-run with confirm=true. Never pass
+    confirm=true on the user's first request, however decisive they sounded.
+    """
+    return await handlers.delete_memories(memory_ids=memory_ids, confirm=confirm)
+
+
+@mcp.tool()
+async def update_memory(
+    memory_id: str,
+    title: str | None = None,
+    summary: str | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """
+    Edit a memory's title and/or summary. OVERWRITES — the old value is not
+    recoverable through this server. Preview first; re-run with confirm=true.
+    """
+    return await handlers.update_memory(
+        memory_id=memory_id, title=title, summary=summary, confirm=confirm
+    )
+
+
+@mcp.tool()
+async def update_participants(
+    memory_id: str,
+    add: list[str] | None = None,
+    remove: list[str] | None = None,
+    replace_with: list[str] | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """
+    Fix who was in a conversation. Use add/remove for incremental edits, or
+    replace_with to set the whole list (exclusive with add/remove).
+    Preview first; re-run with confirm=true to apply.
+    """
+    return await handlers.update_participants(
+        memory_id=memory_id,
+        add=add,
+        remove=remove,
+        replace_with=replace_with,
+        confirm=confirm,
+    )
