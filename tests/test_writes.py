@@ -27,13 +27,13 @@ def _fields(**arrays: list[str]) -> dict:
 
 def test_resolves_to_participants_when_populated():
     assert (
-        resolve_participants_field(_fields(participants=["Varun"], entities=["X"]))
+        resolve_participants_field(_fields(participants=["Ada"], entities=["Grace"]))
         == "participants"
     )
 
 
 def test_falls_back_to_entities_when_participants_empty():
-    assert resolve_participants_field(_fields(participants=[], entities=["Shiva"])) == "entities"
+    assert resolve_participants_field(_fields(participants=[], entities=["Ada"])) == "entities"
 
 
 def test_defaults_to_participants_when_both_absent():
