@@ -147,6 +147,21 @@ Every write returns `confirmation_required` with a preview on the first call and
 **no** write. Re-run with `confirm=true` to apply. Deletes are verified by re-reading your
 profile afterwards — a write that didn't take is reported honestly, never as success.
 
+**Read / write classification.** Every tool carries MCP
+[`annotations`](https://modelcontextprotocol.io/specification/server/tools#annotations)
+so clients (e.g. the Claude connectors UI) can separate reads from writes and flag
+destructive actions:
+
+| Class | Count | Hint | Tools |
+|-------|------:|------|-------|
+| Read-only | 28 | `readOnlyHint: true` | all search / list / brief / stats / digest tools |
+| Write | 3 | `readOnlyHint: false` | `update_memory`, `update_participants`, `set_presentation_pref` |
+| Destructive | 1 | `destructiveHint: true` | `delete_memories` |
+
+These are presentation/consent hints, not server-side enforcement — the actual
+write-safety is the two-phase `confirm` gate. The classification is pinned by tests so a
+new tool can't ship unlabelled.
+
 ### Synthesis & briefs
 
 | Tool | What it does |
@@ -241,7 +256,7 @@ Live evaluation on a real NeoSapien account (~2.6k memories), NeoRecall vs offic
 
 | Check | Official | NeoRecall | Verdict |
 |-------|----------|-----------|---------|
-| Profile identity | Owner search → Mayank Bohra | `get_profile` → same identity | Match |
+| Profile identity | Owner search → account owner | `get_profile` → same identity | Match |
 | Participants | Firestore `entities` | Mapped to participants | Match |
 | Duration | Derived from start/finish | Derived (no more `0`) | Match |
 | MOM + transcript quote | Identical MOM | `quote_search` byte-match on phrase | Match |

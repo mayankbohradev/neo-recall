@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from mcp.types import ToolAnnotations
+
 from neosapien_mcp.tools import handlers
 
 try:
@@ -22,8 +24,28 @@ except ImportError:  # newer SDK rename
         instructions=(Path(__file__).parent / "prompts" / "server_prompt.md").read_text(),
     )
 
+# ---------------------------------------------------------------------------
+# Tool annotations (MCP spec hints).
+#
+# These drive how a client — e.g. the Claude connectors UI — presents and gates
+# each tool. They are HINTS for presentation/consent, not server-side enforcement;
+# the real write-safety is the two-phase confirm gate inside each write handler.
+#
+#   READ   — reads only; never mutates anything.
+#   WRITE  — mutates state but is reversible / non-destructive.
+#   DELETE — destructive: permanent, no undo.
+#
+# openWorldHint=False everywhere: this server talks only to the user's own single
+# NeoSapien account, not an open-ended external world.
+# ---------------------------------------------------------------------------
+READ = ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False)
+WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, openWorldHint=False)
+DELETE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=True, idempotentHint=True, openWorldHint=False
+)
 
-@mcp.tool()
+
+@mcp.tool(annotations=READ)
 async def search_memories(
     query: str | None = None,
     owner_name: str | None = None,
@@ -57,7 +79,7 @@ async def search_memories(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def list_memories(
     archived: bool | None = None,
     limit: int = 20,
@@ -77,7 +99,7 @@ async def list_memories(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def list_filtered_memories(
     memory_ids: list[str],
     limit: int = 20,
@@ -95,25 +117,25 @@ async def list_filtered_memories(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def get_memory(memory_id: str, include_mom: bool = True) -> dict[str, Any]:
     """Full detail for ONE memory. Set include_mom=true for Minutes of Meeting."""
     return await handlers.get_memory(memory_id, include_mom=include_mom)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def get_transcript(memory_id: str) -> dict[str, Any]:
     """Raw transcript segments for a memory. Heavy — use only when needed."""
     return await handlers.get_transcript(memory_id)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def search_people(name_query: str | None = None, limit: int = 20) -> dict[str, Any]:
     """List people (participants / mentioned entities) with optional name filter."""
     return await handlers.search_people(name_query=name_query, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def get_latest_by_person(
     owner_name: str,
     limit: int = 10,
@@ -125,7 +147,7 @@ async def get_latest_by_person(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def memory_stats(
     tags: list[str] | None = None,
     entities: list[str] | None = None,
@@ -147,19 +169,19 @@ async def memory_stats(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def get_profile() -> dict[str, Any]:
     """Authenticated user profile — display_name, email, subscription_status only (PII stripped)."""
     return await handlers.get_profile()
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def export_memories(memory_ids: list[str], format: str = "json") -> dict[str, Any] | str:
     """Export chosen memory ids as JSON or CSV (light fields)."""
     return await handlers.export_memories(memory_ids=memory_ids, format=format)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def weekly_brief(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -168,7 +190,7 @@ async def weekly_brief(
     return await handlers.weekly_brief(start_date=start_date, end_date=end_date)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def triage_memories(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -181,7 +203,7 @@ async def triage_memories(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def rank_by_quality(
     limit: int = 20,
     start_date: str | None = None,
@@ -191,19 +213,19 @@ async def rank_by_quality(
     return await handlers.rank_by_quality(limit=limit, start_date=start_date, end_date=end_date)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def people_digest(name: str, limit: int = 20) -> str:
     """Everything about a person: participant OR mentioned entity matches, summarized."""
     return await handlers.people_digest(name=name, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def related_memories(memory_id: str, limit: int = 10) -> dict[str, Any]:
     """Find memories related to one id via shared people/topics/entities."""
     return await handlers.related_memories(memory_id=memory_id, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def whats_new(
     since: str | None = None,
     limit: int = 30,
@@ -213,7 +235,7 @@ async def whats_new(
     return await handlers.whats_new(since=since, limit=limit, mark_seen=mark_seen)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def topic_timeline(
     topic: str,
     start_date: str | None = None,
@@ -223,13 +245,13 @@ async def topic_timeline(
     return await handlers.topic_timeline(topic=topic, start_date=start_date, end_date=end_date)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def daily_brief(date: str | None = None) -> str:
     """One-day narrative brief (default: today UTC). Wrapper around weekly_brief."""
     return await handlers.daily_brief(date=date)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def compare_periods(
     period_a_start: str | None = None,
     period_a_end: str | None = None,
@@ -245,7 +267,7 @@ async def compare_periods(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def action_items(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -255,7 +277,7 @@ async def action_items(
     return await handlers.action_items(start_date=start_date, end_date=end_date, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def follow_ups_due(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -265,7 +287,7 @@ async def follow_ups_due(
     return await handlers.follow_ups_due(start_date=start_date, end_date=end_date, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def decision_log(
     topic: str | None = None,
     start_date: str | None = None,
@@ -278,13 +300,13 @@ async def decision_log(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def memory_graph(memory_id: str, depth: int = 1, limit: int = 15) -> dict[str, Any]:
     """Ego graph of related memories (nodes + scored edges) for visualization / artifacts."""
     return await handlers.memory_graph(memory_id=memory_id, depth=depth, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def duplicate_candidates(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -297,7 +319,7 @@ async def duplicate_candidates(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def habit_signals(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -307,7 +329,7 @@ async def habit_signals(
     return await handlers.habit_signals(start_date=start_date, end_date=end_date, days=days)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def export_brief_pack(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -316,19 +338,19 @@ async def export_brief_pack(
     return await handlers.export_brief_pack(start_date=start_date, end_date=end_date)
 
 
-@mcp.tool()
+@mcp.tool(annotations=WRITE)
 async def set_presentation_pref(mode: str = "ask") -> dict[str, Any]:
     """Persist visual preference for this install: ask | always | never."""
     return await handlers.set_presentation_pref(mode=mode)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def get_presentation_pref() -> dict[str, Any]:
     """Read saved presentation preference (ask/always/never)."""
     return await handlers.get_presentation_pref()
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ)
 async def quote_search(
     query: str,
     start_date: str | None = None,
@@ -360,7 +382,7 @@ if __name__ == "__main__":
 # exposed — `archived` is the reversible delete primitive the Neo app itself uses.
 
 
-@mcp.tool()
+@mcp.tool(annotations=DELETE)
 async def delete_memories(memory_ids: list[str], confirm: bool = False) -> dict[str, Any]:
     """
     PERMANENTLY delete memories from the user's NeoSapien profile.
@@ -381,7 +403,7 @@ async def delete_memories(memory_ids: list[str], confirm: bool = False) -> dict[
     return await handlers.delete_memories(memory_ids=memory_ids, confirm=confirm)
 
 
-@mcp.tool()
+@mcp.tool(annotations=WRITE)
 async def update_memory(
     memory_id: str,
     title: str | None = None,
@@ -397,7 +419,7 @@ async def update_memory(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=WRITE)
 async def update_participants(
     memory_id: str,
     add: list[str] | None = None,

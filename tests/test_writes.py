@@ -237,3 +237,44 @@ def test_delete_tool_docstring_tells_model_to_say_profile():
     # the instruction must not itself spell out the store names — a model reading a
     # banned-word list is more likely to echo them back to the user.
     assert "Firestore" not in doc
+
+
+# --- tool annotations (read/write/destructive classification) ----------------
+# The Claude connectors UI reads these MCP hints to separate read tools from write
+# tools and to flag destructive ones. Every tool MUST carry an annotation, and the
+# three writers must not be mislabelled as read-only — an unannotated write tool would
+# silently appear under "read" and bypass the UI's write-consent treatment.
+
+WRITE_TOOLS = {"update_memory", "update_participants", "set_presentation_pref"}
+DESTRUCTIVE_TOOLS = {"delete_memories"}
+
+
+def _tool_objs():
+    from neosapien_mcp import server
+
+    reg = server.mcp._tool_manager._tools  # name -> Tool
+    return reg
+
+
+def test_every_tool_has_annotations():
+    for name, tool in _tool_objs().items():
+        assert tool.annotations is not None, f"{name} has no read/write annotation"
+
+
+def test_write_tools_are_not_marked_read_only():
+    tools = _tool_objs()
+    for name in WRITE_TOOLS | DESTRUCTIVE_TOOLS:
+        assert tools[name].annotations.readOnlyHint is False, f"{name} wrongly marked read-only"
+
+
+def test_delete_is_the_only_destructive_tool():
+    destructive = {n for n, t in _tool_objs().items() if t.annotations.destructiveHint}
+    assert destructive == DESTRUCTIVE_TOOLS
+
+
+def test_read_tools_are_marked_read_only():
+    tools = _tool_objs()
+    writers = WRITE_TOOLS | DESTRUCTIVE_TOOLS
+    for name, tool in tools.items():
+        if name not in writers:
+            assert tool.annotations.readOnlyHint is True, f"{name} should be read-only"
